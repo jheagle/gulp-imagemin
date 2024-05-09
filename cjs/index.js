@@ -31,7 +31,7 @@ var _index4 = _interopRequireDefault(require("./node_modules/plur/index.js"));
 var _index5 = require("./node_modules/gulp-plugin-extras/index.js");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function (e) { return e ? t : r; })(e); }
-function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != typeof e && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && Object.prototype.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
+function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != typeof e && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
 const PLUGIN_NAME = 'gulp-imagemin';
 const defaultPlugins = ['gifsicle', 'mozjpeg', 'optipng', 'svgo'];
 const loadPlugin = async (pluginName, ...arguments_) => {
@@ -47,6 +47,7 @@ const loadPlugin = async (pluginName, ...arguments_) => {
 };
 const exposePlugin = async plugin => (...arguments_) => loadPlugin(plugin, ...arguments_);
 const getDefaultPlugins = async () => Promise.all(defaultPlugins.flatMap(plugin => loadPlugin(plugin)));
+const validExtensions = new Set(['.jpg', '.jpeg', '.png', '.gif', '.svg']);
 function gulpImagemin(plugins, options) {
   if (typeof plugins === 'object' && !Array.isArray(plugins)) {
     options = plugins;
@@ -58,7 +59,6 @@ function gulpImagemin(plugins, options) {
     verbose: _nodeProcess.default.argv.includes('--verbose'),
     ...options
   };
-  const validExtensions = new Set(['.jpg', '.jpeg', '.png', '.gif', '.svg']);
   let totalBytes = 0;
   let totalSavedBytes = 0;
   let totalFiles = 0;
@@ -90,7 +90,7 @@ function gulpImagemin(plugins, options) {
     if (options.verbose) {
       console.log(`${PLUGIN_NAME}:`, _index2.default.green('✔ ') + file.relative + _index2.default.gray(` (${message})`));
     }
-    file.contents = data;
+    file.contents = Buffer.from(data);
     return file;
   }, {
     async *onFinish() {

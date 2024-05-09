@@ -18,11 +18,6 @@ const convertCommon = () => makeCommon(
 			],
 		},
 		customChanges: {
-			'node_modules/imagemin-mozjpeg/node_modules/execa/lib/kill.js': [
-				{
-					updateContent: content => content.replace('import onExit from \'signal-exit\';', 'import { onExit } from \'signal-exit\';'),
-				},
-			],
 			'./index.mjs': [
 				{
 					updateContent: content => content.replace(
