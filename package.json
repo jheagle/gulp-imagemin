@@ -56,9 +56,9 @@
 		"pretty-bytes": "^6.1.1"
 	},
 	"devDependencies": {
-		"ava": "^6.1.2",
-		"common-exports": "^1.3.1",
-		"imagemin-pngquant": "^9.0.2",
+		"ava": "^6.1.3",
+		"common-exports": "^1.3.2",
+		"imagemin-pngquant": "^10.0.0",
 		"vinyl": "^3.0.0",
 		"xo": "^0.58.0"
 	},
@@ -66,7 +66,7 @@
 		"imagemin-gifsicle": "^7.0.0",
 		"imagemin-mozjpeg": "^10.0.0",
 		"imagemin-optipng": "^8.0.0",
-		"imagemin-svgo": "^10.0.1"
+		"imagemin-svgo": "^11.0.0"
 	},
 	"peerDependencies": {
 		"gulp": ">=4"
