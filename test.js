@@ -1,6 +1,6 @@
 const {readFileSync} = require('node:fs');
 const path = require('node:path');
-const imageminPngquant = require('imagemin-pngquant');
+const imageminPngquant = require('./cjs/node_modules/imagemin-pngquant/index.js').default;
 const Vinyl = require('vinyl');
 const test = require('ava');
 const gulpImagemin = require('./cjs/index.js').default;

@@ -37,3 +37,20 @@ const convertCommon = () => makeCommon(
 );
 
 exports.convertCommon = convertCommon;
+
+const convertPlugins = () => makeCommon(
+	'./node_modules/imagemin-pngquant/index.js',
+	'cjs/node_modules/imagemin-pngquant',
+	{
+		copyResources: {
+			'./node_modules/imagemin-pngquant/index.js': [
+				{
+					src: './node_modules/pngquant-bin/package.json',
+					dest: './cjs/node_modules/imagemin-pngquant/node_modules/pngquant-bin/package.json',
+					updateContent: content => content.replace('\n\t"type": "module",', ''),
+				},
+			],
+		},},
+);
+
+exports.convertPlugins = convertPlugins;
