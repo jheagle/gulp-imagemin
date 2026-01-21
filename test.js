@@ -1,14 +1,14 @@
 const {readFileSync} = require('node:fs');
 const path = require('node:path');
 const imageminPngquant = require('./cjs/node_modules/imagemin-pngquant/index.js').default;
+const imageminWebp = require('./cjs/node_modules/imagemin-webp/index.js').default;
 const Vinyl = require('vinyl');
 const test = require('ava');
 const gulpImagemin = require('./cjs/index.js').default;
 let {mozjpeg, svgo} = require('./cjs/index.js');
 
-const createFixture = (plugins = null, file = 'fixture.png') => {
-	const filePath = path.join(__dirname, file);
-	const buffer = readFileSync(filePath);
+const createFixture = async (plugins = null, file = 'fixture.png') => {
+	const buffer = readFileSync(path.join(__dirname, file));
 	const stream = gulpImagemin(plugins);
 
 	stream.end(new Vinyl({
@@ -42,6 +42,15 @@ test('minify JPEG with custom settings', async t => {
 test('use custom plugins', async t => {
 	const {stream} = await createFixture([imageminPngquant()]);
 	const {stream: compareStream} = await createFixture();
+	const file = await stream.toArray();
+	const compareFile = await compareStream.toArray();
+
+	t.true(file[0].contents.length < compareFile[0].contents.length);
+});
+
+test('use webp plugin', async t => {
+	const {stream} = await createFixture([imageminWebp({quality: 50})], 'fixture.webp');
+	const {stream: compareStream} = await createFixture(null, 'fixture.webp');
 	const file = await stream.toArray();
 	const compareFile = await compareStream.toArray();
 

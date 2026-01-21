@@ -38,7 +38,7 @@ const convertCommon = () => makeCommon(
 
 exports.convertCommon = convertCommon;
 
-const convertPlugins = () => makeCommon(
+const convertPngquant = () => makeCommon(
 	'./node_modules/imagemin-pngquant/index.js',
 	'cjs/node_modules/imagemin-pngquant',
 	{
@@ -50,7 +50,23 @@ const convertPlugins = () => makeCommon(
 					updateContent: content => content.replace('\n\t"type": "module",', ''),
 				},
 			],
-		},},
+		},
+	},
 );
+
+exports.convertPngquant = convertPngquant;
+
+const convertWebp = () => makeCommon(
+	'./node_modules/imagemin-webp/index.js',
+	'cjs/node_modules/imagemin-webp',
+	{},
+);
+
+exports.convertWebp = convertWebp;
+
+const convertPlugins = () => {
+	convertPngquant();
+	convertPngquant();
+};
 
 exports.convertPlugins = convertPlugins;
