@@ -1,36 +1,5 @@
-const {cpSync, readdirSync, readFileSync, writeFileSync} = require('node:fs');
+const {cpSync, readFileSync, writeFileSync} = require('node:fs');
 const {makeCommon} = require('common-exports');
-
-// Everything under cjs/ is meant to be pure CommonJS - that's the entire point of this fork. common-exports
-// individually converts ESM siblings it discovers to proper CJS *content*, but when one of those siblings sits
-// in the same private node_modules folder as an already-CommonJS package (e.g. cross-spawn, next to execa and
-// its own dependency tree), that package's wholesale copy also carries along the ESM sibling's original,
-// unconverted package.json (common-exports' conversion never touches package.json itself, only .js content) -
-// leaving a mismatch where Node refuses to require() a file whose content is valid CJS because the nearest
-// package.json still declares "type": "module". Sweep the whole output afterward and fix any that slipped
-// through, rather than trying to enumerate every affected sibling by hand.
-const stripEsmType = directory => {
-	for (const entry of readdirSync(directory, {withFileTypes: true})) {
-		const entryPath = `${directory}/${entry.name}`;
-		if (entry.isDirectory()) {
-			stripEsmType(entryPath);
-			continue;
-		}
-
-		if (entry.name !== 'package.json') {
-			continue;
-		}
-
-		const content = readFileSync(entryPath).toString();
-		// Match the "type": "module" line with any indentation/trailing comma (some vendored packages use
-		// spaces instead of tabs, or have it as the final property with no trailing comma) rather than relying
-		// on one exact literal format.
-		const updated = content.replace(/[ \t]*"type"\s*:\s*"module",?\r?\n/, '');
-		if (updated !== content) {
-			writeFileSync(entryPath, updated);
-		}
-	}
-};
 
 const streamToPromise = stream => new Promise((resolve, reject) => {
 	stream.on('finish', resolve);
@@ -47,7 +16,6 @@ const convertCommon = async () => {
 					{
 						src: 'node_modules/mozjpeg/package.json',
 						dest: 'cjs/node_modules/mozjpeg/package.json',
-						updateContent: content => content.replace('\n\t"type": "module",', ''),
 					},
 					{
 						src: 'node_modules/mozjpeg/vendor',
@@ -73,23 +41,18 @@ const convertCommon = async () => {
 			},
 		},
 	));
-	stripEsmType('cjs');
 };
 
 exports.convertCommon = convertCommon;
 
-// Imagemin-pngquant's own index.js is already plain CommonJS (no import/export at all) - running it through
-// makeCommon finds nothing to convert, so its own require('is-stream')/require('pngquant-bin') calls are left
-// completely untouched instead of being resolved to a private, self-contained copy. That's fine as long as the
-// real top-level node_modules happens to have compatible CJS versions of those packages, but fragile - it broke
-// once is-stream itself went ESM-only. Copy it wholesale instead (matching how common-exports treats any
-// already-CommonJS package) so it carries its own complete, private dependency tree (including its own nested
-// is-stream) rather than depending on what the real environment happens to have installed.
+// Imagemin-pngquant's own index.js is already plain CommonJS (no import/export at all) - common-exports@1.3.12+
+// detects this and copies its whole containing directory wholesale (its own private node_modules included, e.g.
+// its nested is-stream) automatically, matching how an already-CommonJS sibling is already handled elsewhere.
 const convertPngquant = async () => {
-	cpSync('./node_modules/imagemin-pngquant', 'cjs/node_modules/imagemin-pngquant', {recursive: true});
-	// Pngquant-bin isn't nested inside imagemin-pngquant's own node_modules, so it doesn't come along with the
-	// copy above - and it's ESM ("type": "module"), so it needs the same package.json patch mozjpeg gets in
-	// convertCommon.
+	await streamToPromise(makeCommon('./node_modules/imagemin-pngquant/index.js', 'cjs/node_modules/imagemin-pngquant', {}));
+	// Pngquant-bin isn't nested inside imagemin-pngquant's own node_modules, so it isn't reachable by that
+	// wholesale copy - it still needs to be copied and have its own "type": "module" patched by hand, same as
+	// mozjpeg/cwebp-bin's vendor binaries above/below.
 	const pngquantBinaryDestination = 'cjs/node_modules/imagemin-pngquant/node_modules/pngquant-bin';
 	cpSync('./node_modules/pngquant-bin', pngquantBinaryDestination, {recursive: true});
 	const packagePath = `${pngquantBinaryDestination}/package.json`;
@@ -112,7 +75,6 @@ const convertWebp = async () => {
 					{
 						src: 'node_modules/cwebp-bin/package.json',
 						dest: 'cjs/node_modules/imagemin-webp/node_modules/cwebp-bin/package.json',
-						updateContent: content => content.replace('\n\t"type": "module",', ''),
 					},
 					{
 						src: 'node_modules/cwebp-bin/vendor',
@@ -122,14 +84,10 @@ const convertWebp = async () => {
 			},
 		},
 	));
-	stripEsmType('cjs/node_modules/imagemin-webp');
 };
 
 exports.convertWebp = convertWebp;
 
-const convertPlugins = () => {
-	convertPngquant();
-	convertWebp();
-};
+const convertPlugins = () => Promise.all([convertPngquant(), convertWebp()]);
 
 exports.convertPlugins = convertPlugins;
