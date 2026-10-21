@@ -84,5 +84,14 @@
 		"rules": {
 			"unicorn/prefer-module": 1
 		}
+	},
+	"allowScripts": {
+		"cwebp-bin@8.0.0": true,
+		"gifsicle@5.3.0": true,
+		"mozjpeg@8.0.0": true,
+		"optipng-bin@7.0.1": true,
+		"pngquant-bin@6.0.1": true,
+		"core-js": false,
+		"core-js-pure": false
 	}
 }
